@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Ingredient Finder</title>
+</head>
+<body>
+    <h1>Check console for the dish with minimum ingredients</h1>
+    <div id="result">Finding the simplest dish...</div>
+
+    <script>
+        const baseurl = 'https://www.themealdb.com/api/json/v1/1/search.php?f=';
+        
+        // Variables to track the overall minimum
+        let minIngredientMeal = null;
+        let minCount = Infinity;
+
+        async function startSearch() {
+            const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+            
+            // Map every letter to a fetch promise
+            const fetchPromises = alphabet.map(char => fetchData(char));
+
+            // Wait for ALL letters to be processed
+            await Promise.all(fetchPromises);
+
+            // Output the final result
+            if (minIngredientMeal) {
+                console.log("--- FINAL RESULT ---");
+                console.log(`The dish with the fewest ingredients is: ${minIngredientMeal.strMeal}`);
+                console.log(`Ingredient Count: ${minCount}`);
+                console.log("Meal Data:", minIngredientMeal);
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>Winner: ${minIngredientMeal.strMeal}</h2>
+                    <p>Ingredients: ${minCount}</p>
+                    <img src="${minIngredientMeal.strMealThumb}" width="200">
+                `;
+            }
+        }
+
+        async function fetchData(char) {
+            try {
+                const response = await fetch(`${baseurl}${char}`);
+                if (!response.ok) throw new Error("Failed to fetch");
+                
+                const result = await response.json();
+                const meals = result.meals;
+
+                // If no meals found for this letter, skip
+                if (!meals) return;
+
+                meals.forEach(meal => {
+                    let ingredientCount = 0;
+
+                    // Iterate through the 20 possible ingredient keys
+                    for (let i = 1; i <= 20; i++) {
+                        const ingredient = meal[`strIngredient${i}`];
+                        // Check if ingredient exists and is not an empty string
+                        if (ingredient && ingredient.trim() !== "") {
+                            ingredientCount++;
+                        }
+                    }
+
+                    // Update the global minimum
+                    if (ingredientCount > 0 && ingredientCount < minCount) {
+                        minCount = ingredientCount;
+                        minIngredientMeal = meal;
+                        console.log(`New low found: ${meal.strMeal} (${minCount} ingredients)`);
+                    }
+                });
+
+            } catch (error) {
+                console.error(`Error fetching letter ${char}:`, error);
+            }
+        }
+
+        // Run the script
+        startSearch();
+    </script>
+</body>
+</html>
