@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=\, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    Check out the console for dish with minimum ingridients.
+</body>
+<script>
+    const base_url="https://www.themealdb.com/api/json/v1/1/search.php?f=";
+    for(let i=97; i<=122; i++){
+        fetchData(String.fromCharCode(i));
+    }
+    
+    async function fetchData(letter) {
+        try{
+            const response = await fetch(`${base_url}${letter}`);
+            const data = await response.json();
+            console.log(data);
+        }catch(error){
+            console.log(error);
+        }
+    }
+</script>
+</html>
